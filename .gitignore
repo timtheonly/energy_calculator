@@ -1,3 +1,5 @@
 .vscode
 .venv
 *.csv
+__pycache__/
+*.pyc

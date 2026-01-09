@@ -2,9 +2,10 @@ from csv import DictReader
 from datetime import datetime
 from tabulate import tabulate
 from enum import Enum
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from typing import Optional
-import sys
+
+from utils.helper_funcs import squash_data, parse_date_arg, validate_args
 
 rates: list = [
     {"start": 8, "end": 17, "rate": "day"},
@@ -34,32 +35,6 @@ class Weekday:
         self.hours = {str(i): 0 for i in range(0, 24)}
 
 
-def validate_args(args: Namespace) -> Namespace:
-    if args.rates and args.hours:
-        sys.exit("Only --rates or --hours can be passed")
-    if not (args.rates or args.hours):  # Neither were passed default to rates
-        args.rates = True
-    return args
-
-
-def squash_data(data: dict, rate: bool, hour: bool) -> list:
-    squashed_data = []
-    attr = None
-    if rate:
-        attr = "rates"
-    elif hour:
-        attr = "hours"
-    if not attr:
-        raise ValueError
-    for weekday in data.keys():
-        squashed_row = [weekday]
-        data_frame = getattr(data[weekday], attr)
-        for period in data_frame.keys():
-            squashed_row.append(data_frame[period])
-        squashed_data.append(squashed_row)
-    return squashed_data
-
-
 def main() -> None:
     parser = ArgumentParser(
         prog="EnergyCalculator",
@@ -68,6 +43,8 @@ def main() -> None:
     parser.add_argument("filename")
     parser.add_argument("--rates", action="store_true")
     parser.add_argument("--hours", action="store_true")
+    parser.add_argument("--start", type=parse_date_arg)
+    parser.add_argument("--end", type=parse_date_arg)
     args = parser.parse_args()
     args = validate_args(args)
     totalImportKWH: float = 0
@@ -84,8 +61,8 @@ def main() -> None:
     ]:
         weekdayRateKWH[weekday] = Weekday()
 
-    startDate: Optional[datetime] = None
-    endDate: Optional[datetime] = None
+    startDate: Optional[datetime] = args.start
+    endDate: Optional[datetime] = args.end
     with open(args.filename, "r+") as f:
         reader = DictReader(
             f,
@@ -94,10 +71,15 @@ def main() -> None:
             timestamp = datetime.strptime(
                 row["Read Date and End Time"], "%d-%m-%Y %H:%M"
             )
+            if (args.start and timestamp < args.start) or (
+                args.end and timestamp >= args.end
+            ):
+                continue
             if not startDate or timestamp < startDate:
                 startDate = timestamp
             if not endDate or timestamp > endDate:
                 endDate = timestamp
+
             if "Import" in row["Read Type"]:
                 totalImportKWH += float(row["Read Value"])
                 for rate in rates:
@@ -117,11 +99,11 @@ def main() -> None:
         squashedWeekDayRate: list = []
         headers: list = []
         if args.rates:
-            print("KWH breakdown by weekday/rate periods")
+            print("KWH import breakdown by weekday/rate periods")
             squashedWeekDayRate = squash_data(weekdayRateKWH, rate=True, hour=False)
             headers = RateName.get_rate_names()
         elif args.hours:
-            print("KWH breakdown by weekday/hour periods")
+            print("KWH import breakdown by weekday/hour periods")
             squashedWeekDayRate = squash_data(weekdayRateKWH, rate=False, hour=True)
             headers = [str(i) for i in range(0, 24)]
         print(tabulate(squashedWeekDayRate, headers=headers, tablefmt="grid"))
