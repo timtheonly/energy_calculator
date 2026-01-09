@@ -70,7 +70,8 @@ def main() -> None:
     parser.add_argument("--hours", action="store_true")
     args = parser.parse_args()
     args = validate_args(args)
-    totalKWH: float = 0
+    totalImportKWH: float = 0
+    totalExportKWH: float = 0
     weekdayRateKWH: dict = {}
     for weekday in [
         "Monday",
@@ -97,17 +98,21 @@ def main() -> None:
                 startDate = timestamp
             if not endDate or timestamp > endDate:
                 endDate = timestamp
-            totalKWH += float(row["Read Value"])
-            for rate in rates:
-                weekdayRateKWH[timestamp.strftime("%A")].hours[str(timestamp.hour)] += (
-                    float(row["Read Value"])
-                )
-                if timestamp.hour >= rate["start"] and timestamp.hour < rate["end"]:
-                    weekdayRateKWH[timestamp.strftime("%A")].rates[rate["rate"]] += (
-                        float(row["Read Value"])
-                    )
-                    break
-        print(f"Total KWH {totalKWH:.2f}")
+            if "Import" in row["Read Type"]:
+                totalImportKWH += float(row["Read Value"])
+                for rate in rates:
+                    weekdayRateKWH[timestamp.strftime("%A")].hours[
+                        str(timestamp.hour)
+                    ] += float(row["Read Value"])
+                    if timestamp.hour >= rate["start"] and timestamp.hour < rate["end"]:
+                        weekdayRateKWH[timestamp.strftime("%A")].rates[
+                            rate["rate"]
+                        ] += float(row["Read Value"])
+                        break
+            elif "Export" in row["Read Type"]:
+                totalExportKWH += float(row["Read Value"])
+        print(f"Total import KWH {totalImportKWH:.2f}")
+        print(f"Total export KWH {totalExportKWH:.2f}")
 
         squashedWeekDayRate: list = []
         headers: list = []
