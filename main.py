@@ -40,11 +40,28 @@ def main() -> None:
         prog="EnergyCalculator",
         description="Parses an ESB networks HDF file into a human readable format",
     )
-    parser.add_argument("filename")
-    parser.add_argument("--rates", action="store_true")
-    parser.add_argument("--hours", action="store_true")
-    parser.add_argument("--start", type=parse_date_arg)
-    parser.add_argument("--end", type=parse_date_arg)
+    parser.add_argument("filename", help="File containing HDF csv data")
+
+    parser.add_argument(
+        "--start",
+        type=parse_date_arg,
+        help="Date to start calculations from e.g. 01-01-2025",
+    )
+    parser.add_argument(
+        "--end",
+        type=parse_date_arg,
+        help="Date to stop calculations at e.g. 01-01-2025",
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--rates",
+        action="store_true",
+        help="Display data in day, peak and night periods",
+        default=True,
+    )
+    group.add_argument(
+        "--hours", action="store_true", help="Display data as an hourly breakdown"
+    )
     args = parser.parse_args()
     args = validate_args(args)
     totalImportKWH: float = 0
