@@ -26,6 +26,11 @@ class RateName(Enum):
         return ["day", "peak", "night"]
 
 
+class ReadType(Enum):
+    IMPORT = "import"
+    EXPORT = "export"
+
+
 class Weekday:
     rates: dict
     hours: dict
@@ -33,6 +38,20 @@ class Weekday:
     def __init__(self):
         self.rates = {rate_name: 0 for rate_name in RateName.get_rate_names()}
         self.hours = {str(i): 0 for i in range(0, 24)}
+
+
+class HDFData:
+    read: float
+    timestamp: datetime
+    read_type: ReadType
+
+    def __init__(self, read: float, timestamp: str, read_type: str):
+        self.read = read
+        self.timestamp = datetime.strptime(timestamp, "%d-%m-%Y %H:%M")
+        if "Import" in read_type:
+            self.read_type = ReadType.IMPORT
+        elif "Export" in read_type:
+            self.read_type = ReadType.EXPORT
 
 
 def main() -> None:
@@ -57,7 +76,6 @@ def main() -> None:
         "--rates",
         action="store_true",
         help="Display data in day, peak and night periods",
-        default=True,
     )
     group.add_argument(
         "--hours", action="store_true", help="Display data as an hourly breakdown"
@@ -85,31 +103,36 @@ def main() -> None:
             f,
         )
         for row in reader:
-            timestamp = datetime.strptime(
-                row["Read Date and End Time"], "%d-%m-%Y %H:%M"
+            hdf_data = HDFData(
+                read=float(row["Read Value"]),
+                timestamp=row["Read Date and End Time"],
+                read_type=row["Read Type"],
             )
-            if (args.start and timestamp < args.start) or (
-                args.end and timestamp >= args.end
+            if (args.start and hdf_data.timestamp < args.start) or (
+                args.end and hdf_data.timestamp >= args.end
             ):
                 continue
-            if not startDate or timestamp < startDate:
-                startDate = timestamp
-            if not endDate or timestamp > endDate:
-                endDate = timestamp
+            if not startDate or hdf_data.timestamp < startDate:
+                startDate = hdf_data.timestamp
+            if not endDate or hdf_data.timestamp > endDate:
+                endDate = hdf_data.timestamp
 
-            if "Import" in row["Read Type"]:
-                totalImportKWH += float(row["Read Value"])
+            if hdf_data.read_type == ReadType.IMPORT:
+                totalImportKWH += hdf_data.read
                 for rate in rates:
-                    weekdayRateKWH[timestamp.strftime("%A")].hours[
-                        str(timestamp.hour)
-                    ] += float(row["Read Value"])
-                    if timestamp.hour >= rate["start"] and timestamp.hour < rate["end"]:
-                        weekdayRateKWH[timestamp.strftime("%A")].rates[
+                    weekdayRateKWH[hdf_data.timestamp.strftime("%A")].hours[
+                        str(hdf_data.timestamp.hour)
+                    ] += hdf_data.read
+                    if (
+                        hdf_data.timestamp.hour >= rate["start"]
+                        and hdf_data.timestamp.hour < rate["end"]
+                    ):
+                        weekdayRateKWH[hdf_data.timestamp.strftime("%A")].rates[
                             rate["rate"]
-                        ] += float(row["Read Value"])
+                        ] += hdf_data.read
                         break
-            elif "Export" in row["Read Type"]:
-                totalExportKWH += float(row["Read Value"])
+            elif hdf_data.read_type == ReadType.EXPORT:
+                totalExportKWH += hdf_data.read
         print(f"Total import KWH {totalImportKWH:.2f}")
         print(f"Total export KWH {totalExportKWH:.2f}")
 

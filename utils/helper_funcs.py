@@ -4,6 +4,8 @@ from argparse import Namespace
 
 
 def validate_args(args: Namespace) -> Namespace:
+    if not args.hours or args.rates:
+        args.rates = True  # default to rates if nothing passed
     if args.start and args.end:
         if args.end < args.start:
             sys.exit("End must be greater than start")
