@@ -1,11 +1,13 @@
+from argparse import ArgumentParser
 from csv import DictReader
 from datetime import datetime
-from tabulate import tabulate
-from enum import Enum
-from argparse import ArgumentParser
 from typing import Optional
 
-from utils.helper_funcs import squash_data, parse_date_arg, validate_args
+from tabulate import tabulate
+
+from costing import CostingFactory
+from utils.helper_funcs import parse_date_arg, squash_data, validate_args
+from utils.types import HDFData, RateName, ReadType, Weekday
 
 rates: list = [
     {"start": 8, "end": 17, "rate": "day"},
@@ -14,44 +16,6 @@ rates: list = [
     {"start": 0, "end": 8, "rate": "night"},
     {"start": 17, "end": 19, "rate": "peak"},
 ]
-
-
-class RateName(Enum):
-    day = "day"
-    peak = "peak"
-    night = "night"
-
-    @staticmethod
-    def get_rate_names() -> list[str]:
-        return ["day", "peak", "night"]
-
-
-class ReadType(Enum):
-    IMPORT = "import"
-    EXPORT = "export"
-
-
-class Weekday:
-    rates: dict
-    hours: dict
-
-    def __init__(self):
-        self.rates = {rate_name: 0 for rate_name in RateName.get_rate_names()}
-        self.hours = {str(i): 0 for i in range(0, 24)}
-
-
-class HDFData:
-    read: float
-    timestamp: datetime
-    read_type: ReadType
-
-    def __init__(self, read: float, timestamp: str, read_type: str):
-        self.read = read
-        self.timestamp = datetime.strptime(timestamp, "%d-%m-%Y %H:%M")
-        if "Import" in read_type:
-            self.read_type = ReadType.IMPORT
-        elif "Export" in read_type:
-            self.read_type = ReadType.EXPORT
 
 
 def main() -> None:
@@ -70,6 +34,11 @@ def main() -> None:
         "--end",
         type=parse_date_arg,
         help="Date to stop calculations at e.g. 01-01-2025",
+    )
+    parser.add_argument(
+        "--costing",
+        action="store_true",
+        help="calculate cost using rates set out in costing.json",
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -133,6 +102,11 @@ def main() -> None:
                         break
             elif hdf_data.read_type == ReadType.EXPORT:
                 totalExportKWH += hdf_data.read
+        if args.costing:
+            costing = CostingFactory.get_costing_class()
+            calculated_cost = costing.calculate(weekdayRateKWH)
+            print(calculated_cost)
+
         print(f"Total import KWH {totalImportKWH:.2f}")
         print(f"Total export KWH {totalExportKWH:.2f}")
 

@@ -1,6 +1,6 @@
 import sys
-from datetime import datetime
 from argparse import Namespace
+from datetime import datetime
 
 
 def validate_args(args: Namespace) -> Namespace:
