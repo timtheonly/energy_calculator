@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "custom.schema.json",
+    "title": "custom",
+    "description": "A custom electricty rate outline",
+    "type": "object",
+    "properties": {
+        "costing_type": {
+            "type":"string"
+        },
+        "rates": {
+            "type":"object",
+            "properties": {
+                "day": {
+                    "type":"number"
+                },
+                "peak": {
+                    "type":"number"
+                },
+                "night":  {
+                    "type":"number"
+                }
+            },
+            "required": ["day", "night", "peak"]
+        }
+    },
+    "required": ["rates", "costing_type"]
+}

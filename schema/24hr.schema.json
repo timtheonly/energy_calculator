@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "24hr.schema.json",
+    "title": "24hr",
+    "description": "A 24hr electricty rate outline",
+    "type": "object",
+    "properties": {
+        "costing_type": {
+            "type":"string"
+        },
+        "rates": {
+            "type":"number"
+        }
+    },
+    "required": ["rates", "costing_type"]
+}

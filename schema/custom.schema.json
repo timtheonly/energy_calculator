@@ -1,0 +1,82 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "custom.schema.json",
+    "title": "custom",
+    "description": "A custom electricty rate outline",
+    "type": "object",
+    "properties": {
+        "costing_type": {
+            "type": "string"
+        },
+        "rates": {
+            "$ref": "#/$defs/base"
+        },
+        "overrides": {
+            "type": "object",
+            "properties": {
+                "monday": {
+                    "$ref": "#/$defs/base"
+                },
+                "tuesday": {
+                    "$ref": "#/$defs/base"
+                },
+                "wednesday": {
+                    "$ref": "#/$defs/base"
+                },
+                "thursday": {
+                    "$ref": "#/$defs/base"
+                },
+                "friday": {
+                    "$ref": "#/$defs/base"
+                },
+                "saturday": {
+                    "$ref": "#/$defs/base"
+                },
+                "sunday": {
+                    "$ref": "#/$defs/base"
+                }
+            }
+        }
+    },
+    "required": ["rates", "costing_type"],
+    "additionalProperties": false,
+    "$defs": {
+        "base": {
+            "type":"object",
+            "properties": {
+                "day": {
+                    "type":"number"
+                },
+                "peak": {
+                    "type":"number"
+                },
+                "night":  {
+                    "type":"number"
+                },
+                "base_rate": {
+                    "type": "number"
+                }
+            },
+            "oneOf": [
+                {
+                    "required": ["day", "night", "peak"],
+                    "not": {"required": ["base_rate"]}
+                },
+                {
+                    "allOf": [
+                        {
+                            "not": {"required": ["day"]}
+                        },
+                        {
+                            "not": {"required": ["peak"]}
+                        },
+                        {
+                            "not": {"required": ["night"]}
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+}

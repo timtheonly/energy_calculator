@@ -103,9 +103,12 @@ def main() -> None:
             elif hdf_data.read_type == ReadType.EXPORT:
                 totalExportKWH += hdf_data.read
         if args.costing:
-            costing = CostingFactory.get_costing_class()
-            calculated_cost = costing.calculate(weekdayRateKWH)
-            print(calculated_cost)
+            try:
+                costing = CostingFactory.get_costing_class()
+                calculated_cost = costing.calculate(weekdayRateKWH)
+                print(calculated_cost)
+            except ValueError as e:
+                print(f"Failed to load costing information: {e}")
 
         print(f"Total import KWH {totalImportKWH:.2f}")
         print(f"Total export KWH {totalExportKWH:.2f}")
