@@ -61,9 +61,32 @@ class TwentyFourHRCosting(Costing):
 class CustomCosting(Costing):
     costing_type = CostingType.custom
     rates: dict
+    overrides: dict
 
-    def __init__(self, rates, *args, **kwargs):
+    def __init__(self, rates: dict, overrides: dict, *args, **kwargs):
         self.rates = rates
+        self.overrides = overrides
+
+    def calculate(self, reading_data: dict[str, Weekday]) -> dict:
+        result = {"day": 0.0, "peak": 0.0, "night": 0.0}
+        for weekday_name, weekday_data in reading_data.items():
+            for rate_name, value in weekday_data.rates.items():
+                override = self.get_override(weekday_name, rate_name)
+                if override:
+                    result[rate_name] += value * override
+                else:
+                    result[rate_name] += value * self.rates.get(rate_name)
+        return result
+
+    def get_override(self, weekday_name: str, rate_name: str) -> float | None:
+        weekday_name = weekday_name.lower()
+        if self.overrides:
+            if self.overrides.get(weekday_name):
+                if self.overrides[weekday_name].get("base_rate"):
+                    return self.overrides[weekday_name]["base_rate"]
+                elif self.overrides[weekday_name].get(rate_name):
+                    return self.overrides[weekday_name][rate_name]
+        return None
 
 
 class CostingFactory:
