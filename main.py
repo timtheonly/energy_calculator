@@ -106,7 +106,14 @@ def main() -> None:
             try:
                 costing = CostingFactory.get_costing_class()
                 calculated_cost = costing.calculate(weekdayRateKWH)
-                print(calculated_cost)
+                print("Calcualted cost:")
+                print(
+                    tabulate(
+                        calculated_cost.items(),
+                        headers=["period", "cost"],
+                        tablefmt="grid",
+                    )
+                )
             except ValueError as e:
                 print(f"Failed to load costing information: {e}")
 
