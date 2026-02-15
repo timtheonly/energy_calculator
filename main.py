@@ -114,6 +114,9 @@ def main() -> None:
                         tablefmt="grid",
                     )
                 )
+                if totalExportKWH > 0.0:
+                    export_value = costing.calculate_export(totalExportKWH)
+                    print(f"Value of export: {export_value:.2f}")
             except ValueError as e:
                 print(f"Failed to load costing information: {e}")
 

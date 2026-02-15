@@ -9,7 +9,7 @@ from utils.types import CostingType, Weekday
 
 class Costing(ABC):
     costing_type: CostingType
-    required_args: list[str] = ["rates"]
+    rates: dict
 
     @classmethod
     def validate_args(cls, *args, **kwargs) -> tuple[bool, str]:
@@ -26,6 +26,11 @@ class Costing(ABC):
     @abstractmethod
     def calculate(self, reading_data: dict[str, Weekday]) -> dict:
         pass
+
+    def calculate_export(self, total_export: float) -> float:
+        if self.rates.get("export"):
+            return total_export * self.rates["export"]
+        return 0.0
 
 
 class DNPCosting(Costing):
@@ -46,16 +51,16 @@ class DNPCosting(Costing):
 
 class TwentyFourHRCosting(Costing):
     costing_type = CostingType.twenty_four_hour
-    rate: float
+    rates: dict
 
-    def __init__(self, rates: float, *args, **kwargs):
-        self.rate = rates
+    def __init__(self, rates: dict, *args, **kwargs):
+        self.rates = rates
 
     def calculate(self, reading_data: dict[str, Weekday]) -> dict:
         result = 0.0
         for weekday_data in reading_data.values():
             for rate_name, value in weekday_data.rates.items():
-                result += value * self.rate
+                result += value * self.rates.get("import")
         return {"total": result}
 
 

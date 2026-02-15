@@ -19,6 +19,9 @@
                 },
                 "night":  {
                     "type":"number"
+                },
+                "export": {
+                    "type":"number"
                 }
             },
             "required": ["day", "night", "peak"]

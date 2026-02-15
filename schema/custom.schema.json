@@ -55,6 +55,9 @@
                 },
                 "base_rate": {
                     "type": "number"
+                },
+                "export": {
+                    "type":"number"
                 }
             },
             "oneOf": [

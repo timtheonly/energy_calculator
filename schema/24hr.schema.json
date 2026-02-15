@@ -9,7 +9,16 @@
             "type":"string"
         },
         "rates": {
-            "type":"number"
+            "type":"object",
+            "properties": {
+                "import": {
+                    "type":"number"
+                },
+                "export": {
+                    "type":"number"
+                }
+            },
+            "required": ["import"]
         }
     },
     "required": ["rates", "costing_type"]
