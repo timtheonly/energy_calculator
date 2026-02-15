@@ -36,10 +36,11 @@ class DNPCosting(Costing):
         self.rates = rates
 
     def calculate(self, reading_data: dict[str, Weekday]) -> dict:
-        result = {"day": 0.0, "peak": 0.0, "night": 0.0}
+        result = {"day": 0.0, "peak": 0.0, "night": 0.0, "total": 0.0}
         for weekday_data in reading_data.values():
             for rate_name, value in weekday_data.rates.items():
                 result[rate_name] += value * self.rates.get(rate_name)
+                result["total"] += value * self.rates.get(rate_name)
         return result
 
 
@@ -55,7 +56,7 @@ class TwentyFourHRCosting(Costing):
         for weekday_data in reading_data.values():
             for rate_name, value in weekday_data.rates.items():
                 result += value * self.rate
-        return {"calculated": result}
+        return {"total": result}
 
 
 class CustomCosting(Costing):
@@ -68,14 +69,16 @@ class CustomCosting(Costing):
         self.overrides = overrides
 
     def calculate(self, reading_data: dict[str, Weekday]) -> dict:
-        result = {"day": 0.0, "peak": 0.0, "night": 0.0}
+        result = {"day": 0.0, "peak": 0.0, "night": 0.0, "total": 0.0}
         for weekday_name, weekday_data in reading_data.items():
             for rate_name, value in weekday_data.rates.items():
                 override = self.get_override(weekday_name, rate_name)
                 if override:
                     result[rate_name] += value * override
+                    result["total"] += value * override
                 else:
                     result[rate_name] += value * self.rates.get(rate_name)
+                    result["total"] += value * self.rates.get(rate_name)
         return result
 
     def get_override(self, weekday_name: str, rate_name: str) -> float | None:
