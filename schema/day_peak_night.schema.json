@@ -1,8 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "custom.schema.json",
-    "title": "custom",
-    "description": "A custom electricty rate outline",
+    "$id": "day_peak_night.schema.json",
+    "title": "day_peak_night",
+    "description": "A day,peak,night electricty rate outline",
     "type": "object",
     "properties": {
         "costing_type": {
