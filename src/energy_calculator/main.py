@@ -2,10 +2,14 @@ from argparse import ArgumentParser
 
 from tabulate import tabulate
 
-from costing import CostingFactory
-from hdf_parser import HDFParser
-from utils.helper_funcs import parse_date_arg, squash_data, validate_args
-from utils.types import RateName
+from energy_calculator.costing import CostingFactory
+from energy_calculator.hdf_parser import HDFParser
+from energy_calculator.utils.helper_funcs import (
+    parse_date_arg,
+    squash_data,
+    validate_args,
+)
+from energy_calculator.utils.types import RateName
 
 
 def main() -> None:

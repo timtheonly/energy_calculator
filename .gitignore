@@ -4,5 +4,5 @@
 __pycache__/
 *.pyc
 *.json
-!schema/*.json
+!src/energy_calculator/schema/*.json
 .DS_store

@@ -1,7 +1,7 @@
 from csv import DictReader
 from datetime import datetime
 
-from utils.types import HDFData, ReadType, Weekday
+from energy_calculator.utils.types import HDFData, ReadType, Weekday
 
 
 class HDFParser:

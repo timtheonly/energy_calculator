@@ -1,10 +1,11 @@
 import json
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
-from utils.types import CostingType, Weekday
+from energy_calculator.utils.types import CostingType, Weekday
 
 
 class Costing(ABC):
@@ -13,7 +14,8 @@ class Costing(ABC):
 
     @classmethod
     def validate_args(cls, *args, **kwargs) -> tuple[bool, str]:
-        schema_file = f"schema/{cls.costing_type.value}.schema.json"
+        base_path = Path(__file__).parent
+        schema_file = base_path / f"schema/{cls.costing_type.value}.schema.json"
         schema_data = {}
         with open(schema_file) as f:
             schema_data = json.load(f)
