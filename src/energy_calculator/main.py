@@ -1,3 +1,4 @@
+import sys
 from argparse import ArgumentParser
 
 from tabulate import tabulate
@@ -34,6 +35,13 @@ def main() -> None:
         action="store_true",
         help="calculate cost using rates set out in costing.json",
     )
+    parser.add_argument(
+        "--costing-file",
+        "--cf",
+        help="file to use for costing data",
+        type=str,
+        default="costing.json",
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--rates",
@@ -49,7 +57,10 @@ def main() -> None:
     hdfParser.parse()
     if args.costing:
         try:
-            costing = CostingFactory.get_costing_class()
+            costing = CostingFactory.get_costing_class(args.costing_file)
+            if not costing:
+                print("Unable to setup costing")
+                sys.exit()
             calculated_cost = costing.calculate(hdfParser.weekday_import_kwh)
             print("Calcualted cost:")
             print(

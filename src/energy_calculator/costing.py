@@ -107,10 +107,13 @@ class CostingFactory:
     }
 
     @classmethod
-    def get_costing_class(cls) -> Costing:
+    def get_costing_class(cls, costing_file: str) -> Costing | None:
         raw_costing_data: dict = dict()
-        with open("costing.json") as f:
-            raw_costing_data = json.load(f)
+        try:
+            with open(costing_file) as f:
+                raw_costing_data = json.load(f)
+        except OSError:
+            return None
         costing_type = CostingType(raw_costing_data.get("costing_type"))
         costing_class = cls.costing_type_to_class.get(costing_type)
         if not costing_class:
