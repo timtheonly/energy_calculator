@@ -3,8 +3,7 @@
 #:schema https://www.schemastore.org/prek.json
 
 [[repos]]
-repo = "https://github.com/pre-commit/pre-commit-hooks"
-rev = "v3.2.0"
+repo = "builtin"
 hooks = [
   { id = "trailing-whitespace" },
   { id = "end-of-file-fixer" },
