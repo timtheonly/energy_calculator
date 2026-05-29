@@ -53,8 +53,8 @@ def main() -> None:
     )
     args = parser.parse_args()
     args = validate_args(args)
-    hdfParser = HDFParser(args.filename, args.start, args.end)
-    hdfParser.parse()
+    hdfParser = HDFParser(args.start, args.end)
+    hdfParser.parse(filename=args.filename)
     if args.costing:
         try:
             costing = CostingFactory.get_costing_class(args.costing_file)

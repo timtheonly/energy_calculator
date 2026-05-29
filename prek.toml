@@ -31,10 +31,11 @@ hooks = [
     types = ["python"]
   },
   {
-    id = "mypy",
-    name = "mypy",
-    entry = ".venv/bin/mypy",
+    id = "ty",
+    name = "ty",
+    entry = ".venv/bin/ty",
     language = "system",
+    args = ["check"],
     types = ["python"]
   }
 ]

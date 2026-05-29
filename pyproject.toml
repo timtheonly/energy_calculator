@@ -22,9 +22,10 @@ energy_calculator = "energy_calculator:main.main"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.19.1",
     "prek>=0.3.8",
+    "pytest>=9.0.3",
     "ruff>=0.14.10",
+    "ty>=0.0.35",
 ]
 
 [tool.ruff]
