@@ -22,8 +22,10 @@ energy_calculator = "energy_calculator:main.main"
 
 [dependency-groups]
 dev = [
+    "coverage>=7.14.1",
     "prek>=0.3.8",
     "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
     "ruff>=0.14.10",
     "ty>=0.0.35",
 ]

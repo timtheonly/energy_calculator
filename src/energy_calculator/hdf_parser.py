@@ -37,13 +37,16 @@ class HDFParser:
         startDate: datetime | None = self.start
         endDate: datetime | None = self.end
 
-        f: IO
-        if filename:
-            f = open(filename, "r+")
-        elif file:
-            f = file
+        if not (filename or file):
+            raise ValueError
 
-        if not f:
+        f: IO
+        try:
+            if filename:
+                f = open(filename, "r+")
+            elif file:
+                f = file
+        except FileNotFoundError:
             raise ValueError
 
         reader = DictReader(
