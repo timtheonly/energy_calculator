@@ -4,6 +4,7 @@ from pathlib import Path
 
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
+from typing_extensions import override
 
 from energy_calculator.utils.types import CostingType, Weekday
 
@@ -31,51 +32,60 @@ class Costing(ABC):
 
     def calculate_export(self, total_export: float) -> float:
         if self.rates.get("export"):
-            return total_export * self.rates["export"]
+            return total_export * self.rates.get("export", 0.0)
         return 0.0
 
 
 class DNPCosting(Costing):
-    costing_type = CostingType.day_peak_night
-    rates: dict
+    costing_type: CostingType = CostingType.day_peak_night
+    rates: dict[str, float]
 
-    def __init__(self, rates: dict, *args, **kwargs):
+    def __init__(self, rates: dict[str, float], *args, **kwargs):
         self.rates = rates
 
-    def calculate(self, reading_data: dict[str, Weekday]) -> dict:
+    @override
+    def calculate(self, reading_data: dict[str, Weekday]) -> dict[str, float]:
         result = {"day": 0.0, "peak": 0.0, "night": 0.0, "total": 0.0}
         for weekday_data in reading_data.values():
             for rate_name, value in weekday_data.rates.items():
-                result[rate_name] += value * self.rates.get(rate_name)
-                result["total"] += value * self.rates.get(rate_name)
+                result[rate_name] += value * self.rates.get(rate_name, 0.0)
+                result["total"] += value * self.rates.get(rate_name, 0.0)
         return result
 
 
 class TwentyFourHRCosting(Costing):
-    costing_type = CostingType.twenty_four_hour
-    rates: dict
+    costing_type: CostingType = CostingType.twenty_four_hour
+    rates: dict[str, float]
 
-    def __init__(self, rates: dict, *args, **kwargs):
+    def __init__(self, rates: dict[str, float], *args, **kwargs):
         self.rates = rates
 
-    def calculate(self, reading_data: dict[str, Weekday]) -> dict:
+    @override
+    def calculate(self, reading_data: dict[str, Weekday]) -> dict[str, float]:
         result = 0.0
         for weekday_data in reading_data.values():
             for rate_name, value in weekday_data.rates.items():
-                result += value * self.rates.get("import")
+                result += value * self.rates.get("import", 0.0)
         return {"total": result}
 
 
 class CustomCosting(Costing):
-    costing_type = CostingType.custom
-    rates: dict
-    overrides: dict
+    costing_type: CostingType = CostingType.custom
+    rates: dict[str, float]
+    overrides: dict[str, dict[str, float]]
 
-    def __init__(self, rates: dict, overrides: dict, *args, **kwargs):
+    def __init__(
+        self,
+        rates: dict[str, float],
+        overrides: dict[str, dict[str, float]],
+        *args,
+        **kwargs,
+    ):
         self.rates = rates
         self.overrides = overrides
 
-    def calculate(self, reading_data: dict[str, Weekday]) -> dict:
+    @override
+    def calculate(self, reading_data: dict[str, Weekday]) -> dict[str, float]:
         result = {"day": 0.0, "peak": 0.0, "night": 0.0, "total": 0.0}
         for weekday_name, weekday_data in reading_data.items():
             for rate_name, value in weekday_data.rates.items():
@@ -84,8 +94,8 @@ class CustomCosting(Costing):
                     result[rate_name] += value * override
                     result["total"] += value * override
                 else:
-                    result[rate_name] += value * self.rates.get(rate_name)
-                    result["total"] += value * self.rates.get(rate_name)
+                    result[rate_name] += value * self.rates.get(rate_name, 0.0)
+                    result["total"] += value * self.rates.get(rate_name, 0.0)
         return result
 
     def get_override(self, weekday_name: str, rate_name: str) -> float | None:
@@ -100,7 +110,7 @@ class CustomCosting(Costing):
 
 
 class CostingFactory:
-    costing_type_to_class: dict = {
+    costing_type_to_class: dict[CostingType, type[Costing]] = {
         CostingType.day_peak_night: DNPCosting,
         CostingType.twenty_four_hour: TwentyFourHRCosting,
         CostingType.custom: CustomCosting,
@@ -108,7 +118,7 @@ class CostingFactory:
 
     @classmethod
     def get_costing_class(cls, costing_file: str) -> Costing | None:
-        raw_costing_data: dict = dict()
+        raw_costing_data: dict[str, str | dict[str, str]] = dict()
         try:
             with open(costing_file) as f:
                 raw_costing_data = json.load(f)
