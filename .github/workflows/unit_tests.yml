@@ -1,5 +1,11 @@
 name: Unittests
-on: [ push ]
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: read
+  code-quality: write
 jobs:
   uv-example:
     name: python
@@ -18,9 +24,8 @@ jobs:
         # For example, using `pytest`
         run: uv run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
       - name: Upload pytest test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-code-coverage@v1
         with:
-          name: test-results.xml
-          path: junit/test-results.xml
-        # Use always() to always run this step to publish test results when there are test failures
-        if: ${{ always() }}
+          file: junit/test-results.xml
+          language: Python
+          label: code-coverage/pytest
