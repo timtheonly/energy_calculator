@@ -2,21 +2,27 @@ from csv import DictReader
 from datetime import datetime
 from typing import IO
 
-from energy_calculator.utils.types import HDFData, ReadType, Weekday
+from energy_calculator.utils.types import (
+    HDFData,
+    RateName,
+    RatePeriod,
+    ReadType,
+    Weekday,
+)
 
 
 class HDFParser:
     total_import: float = 0.0
     total_export: float = 0.0
-    weekday_import_kwh: dict = {}
+    weekday_import_kwh: dict[str, Weekday] = {}
     start: datetime | None
     end: datetime | None
-    rates: list = [
-        {"start": 8, "end": 17, "rate": "day"},
-        {"start": 19, "end": 23, "rate": "day"},
-        {"start": 23, "end": 24, "rate": "night"},
-        {"start": 0, "end": 8, "rate": "night"},
-        {"start": 17, "end": 19, "rate": "peak"},
+    rates: list[RatePeriod] = [
+        RatePeriod(start=8, end=17, rate=RateName.day),
+        RatePeriod(start=19, end=23, rate=RateName.day),
+        RatePeriod(start=23, end=24, rate=RateName.night),
+        RatePeriod(start=0, end=8, rate=RateName.night),
+        RatePeriod(start=17, end=19, rate=RateName.peak),
     ]
 
     def __init__(self, start: datetime | None = None, end: datetime | None = None):
@@ -40,13 +46,16 @@ class HDFParser:
         if not (filename or file):
             raise ValueError
 
-        f: IO
+        f: IO | None = None
         try:
             if filename:
                 f = open(filename, "r+")
             elif file:
                 f = file
         except FileNotFoundError:
+            raise ValueError
+
+        if not f:
             raise ValueError
 
         reader = DictReader(
@@ -66,7 +75,7 @@ class HDFParser:
             f.close()
 
     def _parse_row(
-        self, row: dict, startDate, endDate
+        self, row: dict[str, str], startDate: datetime | None, endDate: datetime | None
     ) -> tuple[datetime | None, datetime | None]:
         hdf_data = HDFData(
             read=float(row["Read Value"]),
@@ -89,11 +98,11 @@ class HDFParser:
                     str(hdf_data.timestamp.hour)
                 ] += hdf_data.read
                 if (
-                    hdf_data.timestamp.hour >= rate["start"]
-                    and hdf_data.timestamp.hour < rate["end"]
+                    hdf_data.timestamp.hour >= rate.start
+                    and hdf_data.timestamp.hour < rate.end
                 ):
                     self.weekday_import_kwh[hdf_data.timestamp.strftime("%A")].rates[
-                        rate["rate"]
+                        rate.rate.value
                     ] += hdf_data.read
                     break
         elif hdf_data.read_type == ReadType.EXPORT:

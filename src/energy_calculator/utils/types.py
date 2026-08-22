@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
@@ -23,9 +24,16 @@ class ReadType(Enum):
     EXPORT = "export"
 
 
+@dataclass
+class RatePeriod:
+    start: int
+    end: int
+    rate: RateName
+
+
 class Weekday:
-    rates: dict
-    hours: dict
+    rates: dict[str, float]
+    hours: dict[str, float]
 
     def __init__(self):
         self.rates = {rate_name: 0 for rate_name in RateName.get_rate_names()}
