@@ -20,11 +20,13 @@ jobs:
         run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
       - name: Create tag
         uses: actions/github-script@v9.0.0
+        env:
+          current_date: ${{DATE}}
         with:
           script: |
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: "refs/tags/release-${DATE}",
+              ref: `refs/tags/release-${process.env.current_date}`,
               sha: context.sha
             })
