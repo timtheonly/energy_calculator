@@ -25,6 +25,6 @@ jobs:
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: `refs/tags/release-${DATE}`,
+              ref: "refs/tags/release-${DATE}",
               sha: context.sha
             })
