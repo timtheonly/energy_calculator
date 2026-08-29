@@ -27,7 +27,7 @@ class Costing(ABC):
         return True, ""
 
     @abstractmethod
-    def calculate(self, reading_data: dict[str, Weekday]) -> dict:
+    def calculate(self, reading_data: dict[str, Weekday]) -> dict[str, float]:
         pass
 
     def calculate_export(self, total_export: float) -> float:
