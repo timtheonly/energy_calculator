@@ -18,7 +18,7 @@ class TestCostingFactory(unittest.TestCase):
 
     def _write_costing_file(self, data: dict, name: str = "costing.json") -> str:
         path = Path(self.tmp_dir.name) / name
-        path.write_text(json.dumps(data))
+        _ = path.write_text(json.dumps(data))
         return str(path)
 
     def test_missing_file_returns_none(self):
@@ -29,21 +29,21 @@ class TestCostingFactory(unittest.TestCase):
 
     def test_invalid_json_raises(self):
         costing_file = self._write_costing_file({})
-        Path(costing_file).write_text("not valid json")
+        _ = Path(costing_file).write_text("not valid json")
         with self.assertRaises(ValueError):
-            CostingFactory.get_costing_class(costing_file)
+            _ = CostingFactory.get_costing_class(costing_file)
 
     def test_unknown_costing_type_raises(self):
         costing_file = self._write_costing_file(
             {"costing_type": "not_a_real_type", "rates": {}}
         )
         with self.assertRaises(ValueError):
-            CostingFactory.get_costing_class(costing_file)
+            _ = CostingFactory.get_costing_class(costing_file)
 
     def test_missing_costing_type_raises(self):
         costing_file = self._write_costing_file({"rates": {"import": 0.2}})
         with self.assertRaises(ValueError):
-            CostingFactory.get_costing_class(costing_file)
+            _ = CostingFactory.get_costing_class(costing_file)
 
     def test_24hr_returns_configured_instance(self):
         costing_file = self._write_costing_file(
@@ -58,7 +58,7 @@ class TestCostingFactory(unittest.TestCase):
             {"costing_type": "24hr", "rates": {"export": 0.195}}
         )
         with self.assertRaises(ValueError):
-            CostingFactory.get_costing_class(costing_file)
+            _ = CostingFactory.get_costing_class(costing_file)
 
     def test_day_peak_night_returns_configured_instance(self):
         costing_file = self._write_costing_file(
@@ -84,7 +84,7 @@ class TestCostingFactory(unittest.TestCase):
             }
         )
         with self.assertRaises(ValueError):
-            CostingFactory.get_costing_class(costing_file)
+            _ = CostingFactory.get_costing_class(costing_file)
 
     def test_custom_returns_configured_instance_with_overrides(self):
         costing_file = self._write_costing_file(
@@ -112,7 +112,7 @@ class TestCostingFactory(unittest.TestCase):
             }
         )
         with self.assertRaises(ValueError):
-            CostingFactory.get_costing_class(costing_file)
+            _ = CostingFactory.get_costing_class(costing_file)
 
     def test_custom_override_with_base_rate_and_named_rate_raises(self):
         costing_file = self._write_costing_file(
@@ -123,4 +123,4 @@ class TestCostingFactory(unittest.TestCase):
             }
         )
         with self.assertRaises(ValueError):
-            CostingFactory.get_costing_class(costing_file)
+            _ = CostingFactory.get_costing_class(costing_file)

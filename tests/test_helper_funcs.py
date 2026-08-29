@@ -3,9 +3,9 @@ from argparse import ArgumentParser
 from datetime import datetime
 
 from energy_calculator.utils.helper_funcs import (
+    ProgramArgs,
     parse_date_arg,
     squash_data,
-    validate_args,
 )
 from energy_calculator.utils.types import Weekday
 
@@ -35,26 +35,29 @@ class TestValidateArgs(unittest.TestCase):
         )
 
     def test_validate_args_nothing_passed(self):
-        args = self.parser.parse_args([])
-        result = validate_args(args)
-        assert result.rates
+        args = self.parser.parse_args([], namespace=ProgramArgs())
+        args.validate_args()
+        assert args.rates
 
     def test_validate_just_hours_passed(self):
-        args = self.parser.parse_args(["--hours"])
-        result = validate_args(args)
-        assert not result.rates
+        args = self.parser.parse_args(["--hours"], namespace=ProgramArgs())
+        args.validate_args()
+        assert not args.rates
 
     def test_validate_start_and_end(self):
-        args = self.parser.parse_args(["--start", "01-01-2026", "--end", "02-01-2026"])
-        result = validate_args(args)
-        assert result.rates
-        assert result.end == datetime(day=2, month=1, year=2026)
-        assert result.start == datetime(day=1, month=1, year=2026)
+        args = self.parser.parse_args(
+            ["--start", "01-01-2026", "--end", "02-01-2026"], namespace=ProgramArgs()
+        )
+        args.validate_args()
+        assert args.rates
+        assert args.end == datetime(day=2, month=1, year=2026)
+        assert args.start == datetime(day=1, month=1, year=2026)
 
     def test_validate_start_and_end_mismatch(self):
-        args = self.parser.parse_args(["--end", "01-01-2026", "--start", "02-01-2026"])
-        with self.assertRaises(SystemExit):
-            validate_args(args)
+        args = self.parser.parse_args(
+            ["--end", "01-01-2026", "--start", "02-01-2026"], namespace=ProgramArgs()
+        )
+        assert not args.validate_args()
 
 
 class TestSquashData(unittest.TestCase):

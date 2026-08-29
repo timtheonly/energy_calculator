@@ -1,6 +1,6 @@
 from csv import DictReader
 from datetime import datetime
-from typing import IO
+from typing import TextIO
 
 from energy_calculator.utils.types import (
     HDFData,
@@ -39,14 +39,14 @@ class HDFParser:
         ]:
             self.weekday_import_kwh[weekday] = Weekday()
 
-    def parse(self, filename: str | None = None, file: IO | None = None) -> None:
+    def parse(self, filename: str | None = None, file: TextIO | None = None) -> None:
         startDate: datetime | None = self.start
         endDate: datetime | None = self.end
 
         if not (filename or file):
             raise ValueError
 
-        f: IO | None = None
+        f: TextIO | None = None
         try:
             if filename:
                 f = open(filename, "r+")

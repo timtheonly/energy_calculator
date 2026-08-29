@@ -6,9 +6,9 @@ from tabulate import tabulate
 from energy_calculator.costing import CostingFactory
 from energy_calculator.hdf_parser import HDFParser
 from energy_calculator.utils.helper_funcs import (
+    ProgramArgs,
     parse_date_arg,
     squash_data,
-    validate_args,
 )
 from energy_calculator.utils.types import RateName
 
@@ -51,8 +51,11 @@ def main() -> None:
     group.add_argument(
         "--hours", action="store_true", help="Display data as an hourly breakdown"
     )
-    args = parser.parse_args()
-    args = validate_args(args)
+
+    args: ProgramArgs = parser.parse_args(namespace=ProgramArgs())
+
+    if not args.validate_args():
+        sys.exit()
     hdfParser = HDFParser(args.start, args.end)
     hdfParser.parse(filename=args.filename)
     if args.costing:
@@ -61,7 +64,9 @@ def main() -> None:
             if not costing:
                 print("Unable to setup costing")
                 sys.exit()
-            calculated_cost = costing.calculate(hdfParser.weekday_import_kwh)
+            calculated_cost: dict[str, float] = costing.calculate(
+                hdfParser.weekday_import_kwh
+            )
             print("Calcualted cost:")
             print(
                 tabulate(
@@ -79,8 +84,8 @@ def main() -> None:
     print(f"Total import KWH {hdfParser.total_import:.2f}")
     print(f"Total export KWH {hdfParser.total_export:.2f}")
 
-    squashedWeekDayRate: list = []
-    headers: list = []
+    squashedWeekDayRate: list[list[str | float]] = []
+    headers: list[str] = []
     if args.rates:
         print("KWH import breakdown by weekday/rate periods")
         squashedWeekDayRate = squash_data(

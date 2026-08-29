@@ -1,19 +1,32 @@
-import sys
 from argparse import Namespace
 from datetime import datetime
 
-
-def validate_args(args: Namespace) -> Namespace:
-    if not args.hours or args.rates:
-        args.rates = True  # default to rates if nothing passed
-    if args.start and args.end:
-        if args.end < args.start:
-            sys.exit("End must be greater than start")
-    return args
+from energy_calculator.utils.types import Weekday
 
 
-def squash_data(data: dict, rate: bool, hour: bool) -> list:
-    squashed_data = []
+class ProgramArgs(Namespace):
+    filename: str
+    start: datetime | None
+    end: datetime | None
+    costing: bool | None
+    costing_file: str
+    rates: bool | None
+    hours: bool | None
+
+    def validate_args(self) -> bool:
+        if not self.hours or self.rates:
+            self.rates = True  # default to rates if nothing passed
+        if self.start and self.end:
+            if self.end < self.start:
+                print("End must be greater than start")
+                return False
+        return True
+
+
+def squash_data(
+    data: dict[str, Weekday], rate: bool, hour: bool
+) -> list[list[str | float]]:
+    squashed_data: list[list[str | float]] = []
     attr = None
     if rate:
         attr = "rates"
@@ -22,8 +35,8 @@ def squash_data(data: dict, rate: bool, hour: bool) -> list:
     if not attr:
         raise ValueError
     for weekday in data.keys():
-        squashed_row = [weekday]
-        data_frame = getattr(data[weekday], attr)
+        squashed_row: list[str | float] = [weekday]
+        data_frame: dict[str, float] = getattr(data[weekday], attr)
         for period in data_frame.keys():
             squashed_row.append(data_frame[period])
         squashed_data.append(squashed_row)
