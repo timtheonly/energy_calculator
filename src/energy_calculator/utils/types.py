@@ -7,12 +7,14 @@ class CostingType(Enum):
     day_peak_night = "day_peak_night"
     twenty_four_hour = "24hr"
     custom = "custom"
+    night_boost = "night_boost"
 
 
 class RateName(Enum):
     day = "day"
     peak = "peak"
     night = "night"
+    night_boost = "night_boost"
 
     @staticmethod
     def get_rate_names() -> list[str]:

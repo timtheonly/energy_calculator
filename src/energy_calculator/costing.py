@@ -6,7 +6,7 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 from typing_extensions import override
 
-from energy_calculator.utils.types import CostingType, Weekday
+from energy_calculator.utils.types import CostingType, RateName, RatePeriod, Weekday
 
 
 class Costing(ABC):
@@ -109,11 +109,72 @@ class CustomCosting(Costing):
         return None
 
 
+class NightBoostCosting(Costing):
+    costing_type: CostingType = CostingType.night_boost
+    rates: dict[str, int | float]
+    night_rates_periods: list[RatePeriod]
+
+    def __init__(self, rates: dict[str, int | float], *args, **kwargs):
+        self.rates = rates
+        boost_start = int(self.rates.get("boost_start", 0))
+        boost_end = int(self.rates.get("boost_end", 0))
+        if boost_start == 23:
+            self.night_rates_periods = [
+                RatePeriod(start=boost_start, end=24, rate=RateName.night_boost),
+                RatePeriod(start=0, end=boost_end, rate=RateName.night_boost),
+                RatePeriod(start=boost_end, end=8, rate=RateName.night),
+            ]
+        else:
+            self.night_rates_periods = [
+                RatePeriod(start=boost_start, end=boost_end, rate=RateName.night_boost),
+                RatePeriod(start=23, end=24, rate=RateName.night),
+                RatePeriod(start=0, end=8, rate=RateName.night),
+            ]
+
+    @override
+    def calculate(self, reading_data: dict[str, Weekday]) -> dict[str, float]:
+        result = {
+            "day": 0.0,
+            "peak": 0.0,
+            "night": 0.0,
+            "night_boost": 0.0,
+            "total": 0.0,
+        }
+        for weekday_data in reading_data.values():
+            for rate_name, value in weekday_data.rates.items():
+                if rate_name != RateName.night.value:
+                    result[rate_name] += value * self.rates.get(rate_name, 0.0)
+                    result["total"] += value * self.rates.get(rate_name, 0.0)
+            # night boost breaks night rate in 2 so we need to go by hours
+            for hour, value in weekday_data.hours.items():
+                for rate in self.night_rates_periods:
+                    rate_name = rate.rate.value
+                    if int(hour) >= rate.start and int(hour) < rate.end:
+                        result[rate_name] += value * self.rates.get(rate_name, 0.0)
+                        result["total"] += value * self.rates.get(rate_name, 0.0)
+                        break
+        return result
+
+    @classmethod
+    def validate_args(cls, *args, **kwargs) -> tuple[bool, str]:
+        valid, error = super().validate_args(*args, **kwargs)
+        if kwargs["rates"]["boost_start"] >= 8 and kwargs["rates"]["boost_start"] < 23:
+            valid = False
+            error = f"{error} \n boost_start cannot be during daytime hours"
+        if kwargs["rates"]["boost_end"] > 8 and kwargs["rates"]["boost_end"] < 23:
+            valid = False
+            error = f"{error} \n boost_end cannot be during daytime hours"
+        if error.startswith("\n"):
+            error = error[2:]
+        return valid, error
+
+
 class CostingFactory:
     costing_type_to_class: dict[CostingType, type[Costing]] = {
         CostingType.day_peak_night: DNPCosting,
         CostingType.twenty_four_hour: TwentyFourHRCosting,
         CostingType.custom: CustomCosting,
+        CostingType.night_boost: NightBoostCosting,
     }
 
     @classmethod

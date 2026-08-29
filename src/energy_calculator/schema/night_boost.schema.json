@@ -1,0 +1,40 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "night_boost.schema.json",
+    "title": "night_boost",
+    "description": "A day,peak,night electricty rate outline with night boost",
+    "type": "object",
+    "properties": {
+        "costing_type": {
+            "type":"string"
+        },
+        "rates": {
+            "type":"object",
+            "properties": {
+                "day": {
+                    "type":"number"
+                },
+                "peak": {
+                    "type":"number"
+                },
+                "night":  {
+                    "type":"number"
+                },
+                "night_boost":  {
+                    "type":"number"
+                },
+                "boost_start": {
+                  "type":"integer"
+                },
+                "boost_end": {
+                  "type": "integer"
+                },
+                "export": {
+                    "type":"number"
+                }
+            },
+            "required": ["day", "night", "peak", "night_boost", "boost_start", "boost_end"]
+        }
+    },
+    "required": ["rates", "costing_type"]
+}
