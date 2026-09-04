@@ -90,7 +90,7 @@ class CustomCosting(Costing):
         for weekday_name, weekday_data in reading_data.items():
             for rate_name, value in weekday_data.rates.items():
                 override = self.get_override(weekday_name, rate_name)
-                if override:
+                if override is not None:
                     result[rate_name] += value * override
                     result["total"] += value * override
                 else:
@@ -102,9 +102,9 @@ class CustomCosting(Costing):
         weekday_name = weekday_name.lower()
         if self.overrides:
             if self.overrides.get(weekday_name):
-                if self.overrides[weekday_name].get("base_rate"):
+                if self.overrides[weekday_name].get("base_rate") is not None:
                     return self.overrides[weekday_name]["base_rate"]
-                elif self.overrides[weekday_name].get(rate_name):
+                elif self.overrides[weekday_name].get(rate_name) is not None:
                     return self.overrides[weekday_name][rate_name]
         return None
 

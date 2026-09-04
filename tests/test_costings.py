@@ -1,7 +1,13 @@
 import math
 import unittest
+from typing import override
 
-from energy_calculator.costing import DNPCosting, NightBoostCosting, TwentyFourHRCosting
+from energy_calculator.costing import (
+    CustomCosting,
+    DNPCosting,
+    NightBoostCosting,
+    TwentyFourHRCosting,
+)
 from energy_calculator.utils.types import Weekday
 
 
@@ -118,3 +124,79 @@ class Test24hr(CostingTest):
         thc = TwentyFourHRCosting(rates=rates)
         result = thc.calculate(self.data)
         self.assert_float_close(result["total"], 24)
+
+
+class TestCustom(CostingTest):
+    @override
+    def setUp(self) -> None:
+        super().setUp()
+        self.data["Saturday"] = self.data["Monday"]
+
+    def test_no_overrides(self):
+        rates = {
+            "day": 1,
+            "peak": 2,
+            "night": 0.5,
+        }
+        Cc = CustomCosting(rates=rates, overrides={})
+        result = Cc.calculate(self.data)
+        self.assert_float_close(result["night"], 9)
+        self.assert_float_close(result["peak"], 8)
+        self.assert_float_close(result["day"], 26)
+        self.assert_float_close(result["total"], 43)
+
+    def test_override_base_rate(self):
+        rates = {
+            "day": 1,
+            "peak": 2,
+            "night": 0.5,
+        }
+        overrides = {"saturday": {"base_rate": 0.1}}
+        Cc = CustomCosting(rates=rates, overrides=overrides)
+        result = Cc.calculate(self.data)
+        self.assert_float_close(result["night"], 5.4)
+        self.assert_float_close(result["peak"], 4.2)
+        self.assert_float_close(result["day"], 14.3)
+        self.assert_float_close(result["total"], 23.9)
+
+    def test_override_night_rate(self):
+        rates = {
+            "day": 1,
+            "peak": 2,
+            "night": 0.5,
+        }
+        overrides = {"saturday": {"night": 0.1}}
+        Cc = CustomCosting(rates=rates, overrides=overrides)
+        result = Cc.calculate(self.data)
+        self.assert_float_close(result["night"], 5.4)
+        self.assert_float_close(result["peak"], 8)
+        self.assert_float_close(result["day"], 26)
+        self.assert_float_close(result["total"], 39.4)
+
+    def test_override_free_night(self):
+        rates = {
+            "day": 1,
+            "peak": 2,
+            "night": 0.5,
+        }
+        overrides = {"saturday": {"night": 0.0}}
+        Cc = CustomCosting(rates=rates, overrides=overrides)
+        result = Cc.calculate(self.data)
+        self.assert_float_close(result["night"], 4.5)
+        self.assert_float_close(result["peak"], 8)
+        self.assert_float_close(result["day"], 26)
+        self.assert_float_close(result["total"], 38.5)
+
+    def test_override_free_weekday(self):
+        rates = {
+            "day": 1,
+            "peak": 2,
+            "night": 0.5,
+        }
+        overrides = {"saturday": {"base_rate": 0.0}}
+        Cc = CustomCosting(rates=rates, overrides=overrides)
+        result = Cc.calculate(self.data)
+        self.assert_float_close(result["night"], 4.5)
+        self.assert_float_close(result["peak"], 4)
+        self.assert_float_close(result["day"], 13)
+        self.assert_float_close(result["total"], 21.5)
