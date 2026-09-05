@@ -85,3 +85,20 @@ class TestHdfParser(unittest.TestCase):
 
         assert parser.start == datetime(year=2026, month=1, day=1, hour=0, minute=0)
         assert parser.end == datetime(year=2026, month=1, day=1, hour=1, minute=0)
+
+    def test_load(self):
+        parser = HDFParser()
+        parser.load(
+            {
+                "Monday": {
+                    "rates": {"day": 0.1, "night": 0.1, "peak": 0.1},
+                    "hours": {"1": 0.1},
+                }
+            }
+        )
+        assert parser.weekday_import_kwh["Monday"].hours["1"] == 0.1
+        assert parser.weekday_import_kwh["Monday"].rates == {
+            "day": 0.1,
+            "night": 0.1,
+            "peak": 0.1,
+        }

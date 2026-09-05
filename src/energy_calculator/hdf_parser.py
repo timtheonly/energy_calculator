@@ -39,6 +39,16 @@ class HDFParser:
         ]:
             self.weekday_import_kwh[weekday] = Weekday()
 
+    def load(self, data: dict[str, dict[str, dict[str, float]]]):
+        """
+        Take dict and convert it to weekday_import_kwh e.g. dict[str, Weekday]
+        """
+        for weekday, d in data.items():
+            if d.get("hours"):
+                self.weekday_import_kwh[weekday].hours = d["hours"]
+            if d.get("rates"):
+                self.weekday_import_kwh[weekday].rates = d["rates"]
+
     def parse(self, filename: str | None = None, file: TextIO | None = None) -> None:
         startDate: datetime | None = self.start
         endDate: datetime | None = self.end

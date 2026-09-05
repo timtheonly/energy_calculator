@@ -9,6 +9,10 @@ class CostingType(Enum):
     custom = "custom"
     night_boost = "night_boost"
 
+    @classmethod
+    def get_costing_types(cls) -> list[str]:
+        return [costing_type.value for costing_type in cls]
+
 
 class RateName(Enum):
     day = "day"
@@ -16,9 +20,18 @@ class RateName(Enum):
     night = "night"
     night_boost = "night_boost"
 
-    @staticmethod
-    def get_rate_names() -> list[str]:
-        return ["day", "peak", "night"]
+    @classmethod
+    def get_all_rate_names(cls) -> list[str]:
+        return [rate_name.value for rate_name in cls]
+
+    @classmethod
+    def get_weekday_rate_names(cls) -> list[str]:
+        """
+        kinda kludgy but we only care about certain rate names for weekday
+        """
+        return [
+            rate_name.value for rate_name in cls if rate_name.value != "night_boost"
+        ]
 
 
 class ReadType(Enum):
@@ -38,7 +51,8 @@ class Weekday:
     hours: dict[str, float]
 
     def __init__(self):
-        self.rates = {rate_name: 0 for rate_name in RateName.get_rate_names()}
+        rate_names = RateName.get_weekday_rate_names()
+        self.rates = {rate_name: 0 for rate_name in rate_names}
         self.hours = {str(i): 0 for i in range(0, 24)}
 
 
